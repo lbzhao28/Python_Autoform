@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head id="Head1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="http://${localURL}/static/css/bootstrap.css" rel="stylesheet" media="screen">
+    <link href="http://${localURL}/static/css/docs.css" rel="stylesheet" media="screen">
+    <title>
+       保费试算
+    </title>
+    <script src="http://${localURL}/static/js/jquery.js"></script>
+    <script src="http://${localURL}/static/js/bootstrap.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(function(){
+            jQuery("#btnCal").click(function(){
+                //alert('${insurancecodeid}');
+                insurancecodeid = jQuery("#idDdlProduct").val();
+                securityplanid = jQuery("#idDdlPlan").val();
+                premiumplanid = jQuery("#idDdlPlanFamily").val();
+                ageplan = jQuery("#BePolicyHolder_txtBeHolderOldYears").val();
+                //alert(insurancecodeid);
+
+               insurancecodeText = jQuery("#idDdlProduct").find("option:selected").text();
+               if (insurancecodeText != '健康乐家居计划'){
+                    ageplan = null
+                }
+                showOrderCal(insurancecodeid,securityplanid,premiumplanid,ageplan);
+            });
+
+            jQuery("#idDdlProduct").change(function(){
+                insurancecodeText = jQuery("#idDdlProduct").find("option:selected").text();
+                //alert(insurancecodeText);
+                if (insurancecodeText != '健康乐家居计划'){
+                    var selectText = function(dropdown, selectedValue) {
+                        var options = $(dropdown).find("option");
+                        var matches = $.grep(options,
+                                function(n) { return $(n).text() == selectedValue; });
+                        $(matches).attr("selected", "selected");
+                    };
+
+                    selectText("#BePolicyHolder_txtBeHolderOldYears","60天-80岁");
+                }
+            });
+
+            //special handle for age data.
+            //TODO: how to arrange this?
+            insurancecodeText = jQuery("#idDdlProduct").find("option:selected").text();
+            //alert(insurancecodeText);
+            if (insurancecodeText != '健康乐家居计划'){
+                var selectText = function(dropdown, selectedValue) {
+                    var options = $(dropdown).find("option");
+                    var matches = $.grep(options,
+                            function(n) { return $(n).text() == selectedValue; });
+                    $(matches).attr("selected", "selected");
+                };
+
+                selectText("#BePolicyHolder_txtBeHolderOldYears","60天-80岁");
+            }
+
+
+        });
+
+        function showOrderCal(inINSURANCECODE,inSECURITYPLAN,inPREMIUMPLAN,inAGEPLAN){
+            actionUrl ="http://${localURL}/orderProduct"+'?INSURANCECODE='+inINSURANCECODE+"&SECURITYPLAN="+inSECURITYPLAN+"&PREMIUMPLAN="+inPREMIUMPLAN+"&AGEPLAN="+inAGEPLAN;
+            window.location.href=actionUrl;
+        }
+    </script>
+##prepare the order Product info
+<%!
+import OrderClient
+import json
+
+import configData
+from configData import getConfig
+
+import configObjData
+from configObjData import getConfigPage
+
+configPage = getConfigPage()
+
+
+import sys
+reload(sys)
+#convert the show code.
+sys.setdefaultencoding('utf8')
+
+localURL = getConfig('SERVERINFO','serverIP','str')
+print localURL
+%>
+<%
+if insurancecodeid is not None:
+    localOrderProductLst = OrderClient.getOrderProductInfoLst(insurancecodeid,securityplanid,premiumplanid,ageplan)
+    if localOrderProductLst is not None:
+        if len(localOrderProductLst) > 0:
+            localTOTALPREMIUM = localOrderProductLst[0]["TOTALPREMIUM"]
+            localTOTALSUMINSURED = localOrderProductLst[0]["TOTALSUMINSURED"]
+        else:
+            localTOTALPREMIUM = 0
+            localTOTALSUMINSURED = 0
+    else:
+        localOrderProductLst = None
+else:
+    localOrderProductLst = None
+%>
+</head>
+<body>
+<form id="formCal" class="form-inline">
+    <fieldset>
+    <div class="bs-docs-div">
+        <table class="table table-condensed">
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-primary btn-small" id="btnCal">保费试算</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="label">保单产品</label>
+                </td>
+                <%
+                    item = configPage["SingleControl"]["product"]
+                %>
+                <%namespace name="comp" file="components.html" />
+                <%
+                    if insurancecodeid is not None:
+                        realDataValue = insurancecodeid
+                    else:
+                        ## empty value
+                        realDataValue = '0'
+                %>
+                ${comp.layoutControlDynamic(item=item,realDataValue = realDataValue,dataItem = None)}
+
+                <td>
+                    <label class="label">保单计划</label>
+                </td>
+                <%
+                    item = configPage["SingleControl"]["plan"]
+                %>
+                <%namespace name="comp" file="components.html" />
+                <%
+                    if securityplanid is not None:
+                        realDataValue = securityplanid
+                    else:
+                        ## empty value
+                        realDataValue = '0'
+                %>
+                ${comp.layoutControlDynamic(item=item,realDataValue = realDataValue,dataItem = None)}
+
+                <td>
+                    <label class="label">保单家庭计划</label>
+                </td>
+                <%
+                    item = configPage["SingleControl"]["planFamily"]
+                %>
+                <%namespace name="comp" file="components.html" />
+                <%
+                    if premiumplanid is not None:
+                        realDataValue = premiumplanid
+                    else:
+                        ## empty value
+                        realDataValue = '0'
+                %>
+                ${comp.layoutControlDynamic(item=item,realDataValue = realDataValue,dataItem = None)}
+
+                <td>
+                    <label class="label">被保人年龄段</label>
+                </td>
+                <%
+                    item = configPage["SingleControl"]["planAge"]
+                %>
+                <%namespace name="comp" file="components.html" />
+                <%
+                    if ageplan is not None:
+                        realDataValue = ageplan
+                    else:
+                        ## empty value
+                        realDataValue = '0'
+                %>
+                ${comp.layoutControlDynamic(item=item,realDataValue = realDataValue,dataItem = None)}
+
+            </tr>
+        </table>
+    </div>
+        <%def name="layoutdata(inOrderProductInfoLst)">
+        <div class="bs-docs-div">
+            <table class="table table-hover table-condensed">
+                % if inOrderProductInfoLst is not None:
+                <tr>
+                    <th>产品明细名称</th>
+                    <th>主险/附加险</th>
+                    <th>保额</th>
+                </tr>
+                    % for item in inOrderProductInfoLst:
+                    <tr>
+                        ${caller.body(item=item)}
+                    </tr>
+
+                    % endfor
+                %if localTOTALPREMIUM is not None:
+                <tr>
+                    <td>
+                        <label class="label label-success">月保费</label>
+                    </td>
+                    <td>
+                        <label class="label label-success">${localTOTALPREMIUM}</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label class="label label-success">年保费</label>
+                    </td>
+                    <td>
+                        <%
+                            yearMoney = int(localTOTALPREMIUM)*12
+                        %>
+                        <label class="label label-success">${yearMoney}</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label class="label label-success">总保额</label>
+                    </td>
+                    <td>
+                        <label class="label label-success">${localTOTALSUMINSURED}</label>
+                    </td>
+                </tr>
+                % endif
+                % endif
+
+            </table>
+        </div>
+    </%def>
+    <%call expr="layoutdata(localOrderProductLst)" args="item">
+        <td><label class="label label-info"> ${item["ProductName"]} </label></td>
+        <td><label class="label label-info"> ${item["ISMAINNAME"]}</label></td>
+        <td><label class="label label-info"> ${item["SimpleSUMINSUREDINSURED"]}</label></td>
+    </%call>
+    </fieldset>
+</form>
+</body>
+</html>

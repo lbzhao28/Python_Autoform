@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+## -*- coding: utf-8 -*-
+<html>
+<head>
+    <title>保单信息</title>
+</head>
+
+% for o in objects:
+<body>
+<table width="100" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+        <td>
+            <p><small><b>Shipping address :</b></small>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <small>${ o.partner_id.title or '' } ${ o.partner_id.name }</small>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <small>${ o.partner_shipping_id.state_id and o.partner_shipping_id.state_id.name or '' } ${ o.partner_shipping_id.country_id and o.partner_shipping_id.country_id.name or '' }</small>
+        </td>
+    </tr>
+</table>
+<table>
+    <tr align="left">
+        <th>Description</th>
+        <th>VAT</th>
+        <th>Quantity</th>
+        <th>Unit Price</th>
+        <th>Disc.(%)</th>
+        <th>Price</th>
+    </tr>
+    % for line in o.order_line:
+    <tr>
+        <td>${line.name}</p>
+        <td>${', '.join(map(lambda x: x.name, line.tax_id))}</td>
+        <td>${line.product_uos and line.product_uos_qty or line.product_uom_qty}
+            ${line.product_uos and line.product_uos.name or line.product_uom.name}</td>
+        <td>${line.price_unit}</td>
+        <td>${line.discount or 0.00 }</td>
+        <td>${line.price_subtotal or 0.00 }</td>
+    </tr>
+    % if line['notes']:
+    <tr>
+        <td>${line.notes}</td>
+    </tr>
+
+    % endif
+    % endfor
+</table>
+</body>
+% endfor
+
+</html>

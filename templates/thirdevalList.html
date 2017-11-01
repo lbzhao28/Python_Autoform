@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head id="Head1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="http://${localURL}/static/css/bootstrap.css" rel="stylesheet" media="screen">
+    <link href="http://${localURL}/static/css/docs.css" rel="stylesheet" media="screen">
+    <title>
+        第三方评估与乐尔之家评估等级登记汇总表
+    </title>
+    <script src="http://${localURL}/static/js/jquery.js"></script>
+    <script src="http://${localURL}/static/js/bootstrap.js"></script>
+    <script src="http://${localURL}/static/js/My97DatePicker/WdatePicker.js"></script>
+    <script src="http://${localURL}/static/js/util.js"></script>
+    <script src="http://${localURL}/static/js/localGrpUsrList.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(function(){
+            jQuery("#btnSearch").click(function(){
+                //默认只查询第1页
+                submitSearch('1');
+            });
+
+            jQuery("#btnNew").click(function(){
+                //跳到新页面
+                showNewOrder('${orderid}');
+            });
+
+        });
+
+        function showFastPrev(){
+            submitSearch('1');
+        }
+
+        function showFastNext(pageCount){
+            submitSearch(pageCount);
+        }
+
+        function showCurrent(pageIndex,pageCount){
+            //alert(pageIndex);
+            var intPageIndex = parseInt(pageIndex);
+            var intPageCount = parseInt(pageCount);
+
+            if (intPageIndex < 1){
+                intPageIndex = 1;
+            }
+
+            if (intPageIndex > intPageCount){
+                intPageIndex = intPageCount;
+            }
+
+            var localPageIndex = String(intPageIndex);
+            submitSearch(localPageIndex);
+        }
+
+
+        function showPrev(pageIndex){
+            //alert(pageIndex);
+            var intPageIndex = parseInt(pageIndex);
+            intPageIndex = intPageIndex - 1;
+
+            if (intPageIndex < 1){
+                intPageIndex = 1;
+            }
+
+            var localPageIndex = String(intPageIndex);
+            submitSearch(localPageIndex);
+        }
+
+        function showNext(pageIndex,pageCount){
+            var intPageIndex = parseInt(pageIndex);
+            var intPageCount = parseInt(pageCount);
+            intPageIndex = intPageIndex + 1;
+
+            if (intPageIndex > intPageCount){
+                intPageIndex = intPageCount;
+            }
+            var localPageIndex = String(intPageIndex);
+            submitSearch(localPageIndex);
+        }
+
+
+        function submitSearch(pageIndex){
+            orderid = jQuery("#idOrderid").val();
+
+            if (orderid == ''){
+                alert("请至少选择一个条件");
+                return
+            }
+
+            searchOrder(orderid,pageIndex);
+        }
+
+        function searchOrder(inORDERID,inPAGEINDEX){
+            actionUrl ="http://${localURL}/thirdevalList"+"?orderid="+inORDERID+"&pageindex="+inPAGEINDEX;
+            //alert(actionUrl);
+            window.location.href=actionUrl;
+        }
+        function showOrder(inOrderid){
+            actionUrl ="http://${localURL}/thirdeval"+"?orderid="+inOrderid;
+            //alert(actionUrl);
+            window.location.href=actionUrl;
+        }
+
+        function showNewOrder(){
+            actionUrl ="http://${localURL}/thirdeval";
+            window.location.href=actionUrl;
+        }
+
+    </script>
+##prepare the third eval info
+<%!
+import ThirdEvalClient
+import json
+
+import configData
+from configData import getConfig
+
+import configObjData
+from configObjData import getConfigPage
+
+configPage = getConfigPage()
+
+import sys
+reload(sys)
+#convert the show code.
+sys.setdefaultencoding('utf8')
+
+localURL = getConfig('SERVERINFO','serverIP','str')
+print localURL
+%>
+</head>
+<body>
+
+<div class="bs-docs-example">
+    <form class="form-search">
+
+        <table>
+            <tr>
+                <td>
+                    <label class="label">评估单编号</label>
+                </td>
+                <td>
+                    %if orderid is not None:
+                        <input id="idOrderid" type="text" class="input-small search-query" value="${orderid}"/>
+                    %else:
+                        <input id="idOrderid" type="text" class="input-small search-query" />
+                    %endif
+                </td>
+            </tr>
+        </table>
+        <button id = "btnSearch" type="button" class="btn"><i class="icon-search"></i></button>
+    </form>
+</div>
+
+<form id="formOrderList">
+<%
+if (orderid is not None):
+    print 'orderid'
+    localThirdEvalInfoLst = ThirdEvalClient.getThirdEvalInfoLst(orderid,pageindex)
+    print 'localThirdEvalInfoLst'
+    print localThirdEvalInfoLst
+    #如果没有评估信息,直接无视
+    if len(localThirdEvalInfoLst["ThirdEvalInfoLst"])==0:
+        localThirdEvalInfoLst = None
+else:
+    localThirdEvalInfoLst = ThirdEvalClient.getThirdEvalInfoLst(None,None)
+    print 'none query condition'
+%>
+
+<%def name="layoutdata(inThirdEvalInfoLst)">
+        <div class="bs-docs-div">
+
+            <table class="table table-hover table-condensed">
+                <tr>
+                    <td>
+                        <button id = "btnNew" type="button" class="btn">新建评估单</button>
+                    </td>
+                </tr>
+            </table>
+
+    <table class="table table-hover table-condensed">
+        % if inThirdEvalInfoLst is not None:
+        <tr>
+            <th>评估编号</th>
+            <th>客户姓名</th>
+            <th>第三方ADL</th>
+            <th>第三方等级</th>
+            <th>乐尔之家ADL</th>
+            <th>乐尔之家等级</th>
+            <th>操作</th>
+        </tr>
+
+        <%
+        ThirdEvalInfoLst = inThirdEvalInfoLst["ThirdEvalInfoLst"]
+
+        if len(ThirdEvalInfoLst) == 0:
+            ThirdEvalInfoLst = None
+        %>
+            %if ThirdEvalInfoLst is not None:
+                % for item in ThirdEvalInfoLst:
+                    <tr>
+                        ${caller.body(item=item)}
+                        <td>
+                            <%
+                                orderid = item['orderid']
+                                print('showOrder')
+                                print(orderid)
+                            %>
+
+                            <button type="button" class="btn" onclick="showOrder('${orderid}')">查询明细</button>
+                        </td>
+                    </tr>
+                % endfor
+            %endif
+        % endif
+    </table>
+        </div>
+</%def>
+
+<%call expr="layoutdata(localThirdEvalInfoLst)" args="item">
+    <td>${item["orderid"]}</td>
+    <td>${item["name"]}</td>
+    <td>${item["normal_adl"]}</td>
+    <td>${item["thirdeval_class"]}</td>
+    <td>${item["leer_normal_adl"]}</td>
+    <td>${item["leer_class"]}</td>
+</%call>
+
+%if localThirdEvalInfoLst is not None:
+    %if len(localThirdEvalInfoLst['PageManager']) > 0:
+    <div>
+    <table>
+        <tr>
+            <td>
+                总共有:${localThirdEvalInfoLst['PageManager']['DataCount']}条数据.
+                <br>
+                总共有:${localThirdEvalInfoLst['PageManager']['PageCount']}页数据,每页显示${localThirdEvalInfoLst['PageManager']['PageSize']}条,当前是第${localThirdEvalInfoLst['PageManager']['PageIndex']}页.
+                <br>
+                <button id = "btnFastBackward" type="button" class="btn" onclick="showFastPrev()"><i class="icon-fast-backward"></i></button>
+                <button id = "btnBackward" type="button" class="btn" onclick="showPrev(${localThirdEvalInfoLst['PageManager']['PageIndex']})"><i class="icon-backward"></i></button>
+                <button id = "btnForward" type="button" class="btn" onclick="showNext(${localThirdEvalInfoLst['PageManager']['PageIndex']},${localThirdEvalInfoLst['PageManager']['PageCount']})"><i class="icon-forward"></i></button>
+                <button id = "btnFastForward" type="button" class="btn" onclick="showFastNext(${localThirdEvalInfoLst['PageManager']['PageCount']})"><i class="icon-fast-forward"></i></button>
+                <input id="idPageIndex" type="text" class="input-small" placeholder="去往页"/>
+                <button id = "btnCurrent" type="button" class="btn" onclick="showCurrent(document.getElementById('idPageIndex').value,${localThirdEvalInfoLst['PageManager']['PageCount']})"><i class="icon-arrow-right"></i></button>
+            </td>
+        </tr>
+    </table>
+    </div>
+    %endif
+%endif
+
+</form>
+</body>
+</html>
+

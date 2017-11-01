@@ -1,0 +1,253 @@
+## componentsThirdEval.html
+
+<%def name="layoutControlList(configItem,dataItem)">
+<%
+itemCount = configItem.as_int('itemCount')
+rowNumber = configItem.as_int( 'rowNumber')
+stepLine = int((itemCount+rowNumber-1)/rowNumber)
+configItem.pop('itemCount')
+configItem.pop('rowNumber')
+%>
+
+%for i in range(stepLine):
+<%
+#go to last line:
+if i!=(stepLine-1):
+    stepRow = rowNumber
+else:
+    #last line:
+    if itemCount%rowNumber == 0:
+        stepRow = rowNumber
+    else:
+        stepRow = itemCount%rowNumber
+
+#start from 0.
+j = 0
+%>
+<tr>
+    %for j in range(stepRow):
+        %for member in configItem:
+            <%
+            itemMember=configItem[member]
+            %>
+            %if "titleType" in itemMember:
+				${layoutControlStatic(item=itemMember)} 
+				<%
+                    if "dataName" in itemMember:
+                        dataValueName = itemMember["dataName"]
+                        if dataItem is not None:
+                            if dataValueName in dataItem:
+                                realDataValue = dataItem[dataValueName]
+                            else:
+                                realDataValue = ''
+                        else:
+                            realDataValue = ''
+				%>
+				${layoutControlDynamic(item=itemMember,realDataValue=realDataValue,dataItem=dataItem)}
+                <% break %>
+            %endif
+        %endfor
+        <%
+        configItem.pop(member)
+        %>
+    %endfor
+</tr>
+%endfor
+
+</%def>
+
+<%def name="layoutControlStatic(item)">
+                <td>
+                    %if 'mustHave' in item:
+                        %if item.as_bool('mustHave'):
+                            <${item["titleType"]} class="${item["titleCss"]}"><span style="color: red">*</span>${item["titleText"]}</${item["titleType"]}>
+                        %else:
+                            <${item["titleType"]} class="${item["titleCss"]}">${item["titleText"]}</${item["titleType"]}>
+                        %endif
+                    %else:
+                        <${item["titleType"]} class="${item["titleCss"]}">${item["titleText"]}</${item["titleType"]}>
+                    %endif
+                </td>
+</%def>
+
+<%!
+import configObjData
+from configObjData import getConfigPage
+
+configPage = getConfigPage()
+%>
+##parameter:
+##fName -> 函数名称
+<%def name="layoutOrderCheckSubmit(fName)">
+        function ${fName}(){
+        %if configPage.as_bool('hasThird'):
+            <%
+            configItem = configPage['third_page']
+            %>
+            %for member in configItem:
+                <%
+                itemMember=configItem[member]
+                %>
+                %if "titleType" in itemMember:
+                    <%
+                    alertText = '第三方评估维度' + itemMember["titleText"]
+                    %>
+                    ${layoutCheckSubmit(item=itemMember,alertText=alertText)}
+                %endif
+            %endfor
+        %endif
+
+        %if configPage.as_bool('hasLeer'):
+            <%
+            configItem = configPage['leer_page']
+            %>
+            %for member in configItem:
+                <%
+                itemMember=configItem[member]
+                %>
+                %if "titleType" in itemMember:
+                    <%
+                    alertText = '乐尔之家评估维度' + itemMember["titleText"]
+                    %>
+                    ${layoutCheckSubmit(item=itemMember,alertText=alertText)}
+                %endif
+            %endfor
+        %endif
+
+        return true;
+        }
+</%def>
+
+##parameter:
+##item -> 配置项
+##alertText -> 警告信息
+<%def name="layoutCheckSubmit(item,alertText)">
+        <%
+        functionBody = ''
+        if 'mustHave' in item:
+            if item.as_bool('mustHave'):
+                if item["dataShowType"] == 'radio':
+                    functionBody += 'var boolCheck = jQuery(\'input:radio[name="' + item['dataName'] + '"]\').is(":checked");' + '\n'
+                    functionBody += 'if(!boolCheck){' + '\n'
+                    functionBody += 'alert("' + alertText + '不可以为空' +'");\n'
+                    functionBody += 'return false;\n'
+                    functionBody += '}\n'
+                else:
+                    if 'dataID' in item:
+                        functionBody += 'if(jQuery("#' + item['dataID'] +'").val() == ""){\n'
+                        functionBody += 'alert("' + alertText + '不可以为空' +'");\n'
+                        functionBody += 'jQuery("#' + item['dataID'] +'").focus();\n'
+                        functionBody += 'return false;\n'
+                        functionBody += '}\n'
+                    else:
+                        pass
+        else:
+                pass
+        %>
+        ${functionBody}
+</%def>
+
+##parameter:
+##item -> 配置项
+##realDataValue -> 数据项,单条数据,可以传None
+##dataItem -> 数据项,多条数据,可以传None
+<%def name="layoutControlDynamic(item,realDataValue,dataItem)">
+                %if 'tableColSpan' in item:
+                    <td colspan="${item['tableColSpan']}">
+                %else:
+                    <td>
+                %endif
+                    %if item["dataType"] == 'input':
+                        %if item["dataShowType"] == 'text':
+                            %if "placeholder" in item:
+                                <${item["dataType"]} name=${item["dataName"]} id=${item["dataID"]} type = ${item["dataShowType"]} class="${item["dataCss"]}" value="${realDataValue}" placeholder="${item["placeholder"]}"/>
+                            %else:
+                                <${item["dataType"]} name=${item["dataName"]} id=${item["dataID"]} type = ${item["dataShowType"]} class="${item["dataCss"]}" value="${realDataValue}"/>
+                            %endif
+                        %elif item["dataShowType"] == 'textDate':
+                            <${item["dataType"]} name=${item["dataName"]} id=${item["dataID"]} type = ${item["dataRealShowType"]} class="${item["dataCss"]}" value="${realDataValue}" onclick="${item["onClick"]}"/>
+                        %elif item["dataShowType"] == 'radio':
+                            <%
+                                if realDataValue == '':
+                                    #default value
+                                    realDataValue = None
+                            %>
+                            %for radioItem in item["radio"]:
+                                <%
+                                    radioItemData = item["radio"][radioItem]
+                                %>
+                                <${radioItemData["titleType"]} class="${radioItemData["titleCss"]}">
+                                    %if realDataValue == radioItemData["inDataValue"]:
+                                        <${item["dataType"]} name=${item["dataName"]} id=${radioItemData["inDataID"]} type = "${item["dataShowType"]}" value="${radioItemData["inDataValue"]}" checked/>
+                                    %else:
+                                        <${item["dataType"]} name=${item["dataName"]} id=${radioItemData["inDataID"]} type = "${item["dataShowType"]}" value="${radioItemData["inDataValue"]}"/>
+                                    %endif
+                                        <${radioItemData["inDataType"]} class="${radioItemData["inDataCss"]}"> ${radioItemData["inDataText"]}</${radioItemData["inDataType"]}>
+                                </${radioItemData["titleType"]}>
+                                <script type="text/javascript" language="javascript">
+
+                                </script>
+                            %endfor
+                        %endif
+                    %elif item["dataType"] == 'select':
+                        ##now , we do not use selectSingle. all data from db or config file.
+                        %if item["dataShowType"] == 'selectSingle':
+                            <${item["dataType"]} name=${item["dataName"]} id=${item["dataID"]}  class="${item["dataCss"]}">
+                            %for selectItem in item["select"]:
+                                <%
+                                    selectItemData = item["select"][selectItem]
+                                %>
+                                %if selectItemData["inDataValue"] ==  realDataValue:
+                                    <${selectItemData["titleType"]} value="${selectItemData["inDataValue"]}" selected>${selectItemData["inDataText"]}</${selectItemData["titleType"]}>
+                                %else:
+                                    <${selectItemData["titleType"]} value="${selectItemData["inDataValue"]}">${selectItemData["inDataText"]}</${selectItemData["titleType"]}>
+                                %endif
+                            %endfor
+                            </${item["dataType"]}>
+                        %elif item["dataShowType"] == 'selectBriefAddress':
+                            <%
+                            setScript = ''
+                            %>
+                            %for selectItem in item["select"]:
+                                <%
+                                selectItemData = item["select"][selectItem]
+                                %>
+                                %if "onchange" in selectItemData:
+                                    <${selectItemData["titleType"]} id="${selectItemData["inDataID"]}"  name="${selectItemData["inDataName"]}" class="${selectItemData["inDataCss"]}" onchange="${selectItemData["onchange"]}" ></${selectItemData["titleType"]}>
+                                %else:
+                                    <${selectItemData["titleType"]} id="${selectItemData["inDataID"]}"  name="${selectItemData["inDataName"]}" class="${selectItemData["inDataCss"]}" ></${selectItemData["titleType"]}>
+                                %endif
+                                <%
+                                if "inDataName" in selectItemData:
+                                    dataValueName = selectItemData["inDataName"]
+                                if dataItem is not None:
+                                    if dataValueName in dataItem:
+                                        realDataValue = dataItem[dataValueName]
+                                    else:
+                                        realDataValue = ''
+                                else:
+                                    realDataValue = ''
+                                %>
+                                <%
+                                print selectItemData["inDataID"]+' realDataValue is :'+realDataValue
+                                if (realDataValue is not None) & (realDataValue != ''):
+                                    setScript = setScript + 'jQuery("#'+selectItemData["inDataID"]+'").val('+realDataValue+');'+'\r'
+                                    if "onSetValueDataID" in selectItemData:
+                                        setScript = setScript + 'changevalCityIns(document.getElementById("'+selectItemData["onSetValueDataID"]+'"),'+realDataValue+');' + '\r'
+                                else:
+                                    setScript = setScript + '\r'
+                                endif
+                                %>
+                            %endfor
+                            <script type="text/javascript" language="javascript">
+                                ${item["scriptFile"]}
+                            </script>
+                            %if setScript != '':
+                                <script type="text/javascript" language="javascript">
+                                    ${setScript}
+                                </script>
+                            %endif
+                        %endif
+                    %endif
+                </td>
+</%def>

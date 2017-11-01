@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head id="Head1">
+
+<%doc>
+    ##using Mako to create html file.
+</%doc>
+
+##prepare the thirdeval info
+##if has orderid ,show the data.
+##if no orderid, show a blank file.
+<%!
+import ThirdEvalClient
+import json
+
+import configObjData
+from configObjData import getConfigPage
+
+import configData
+from configData import getConfig
+#print getConfig.__doc__
+
+configPage = getConfigPage()
+
+localURL = getConfig('SERVERINFO','serverIP','str')
+
+import sys
+reload(sys)
+#convert the show code.
+sys.setdefaultencoding('utf8')
+
+import copy
+%>
+<%
+localThirdEval_Info = None
+
+if queryDict is None:
+    localThirdEval_Info = None
+else:
+    if orderid is not None:
+        localThirdEval_Info = ThirdEvalClient.getThirdEvalInfo(orderid)
+    else:
+        localThirdEval_Info = None
+%>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="http://${localURL}/static/css/bootstrap.css" rel="stylesheet" media="screen">
+    <link href="http://${localURL}/static/css/docs.css" rel="stylesheet" media="screen">
+    <title>
+        第三方评估与乐尔之家评估等级登记表
+    </title>
+    <script src="http://${localURL}/static/js/jquery.js"></script>
+    <script src="http://${localURL}/static/js/bootstrap.js"></script>
+    <script src="http://${localURL}/static/js/My97DatePicker/WdatePicker.js"></script>
+    <script src="http://${localURL}/static/js/util.js"></script>
+    <script src="http://${localURL}/static/js/localAddressList.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(function(){
+            var selectText = function(dropdown, selectedValue) {
+                var options = $(dropdown).find("option");
+                var matches = $.grep(options,
+                        function(n) { return $(n).text() == selectedValue; });
+                $(matches).attr("selected", "selected");
+
+            };
+            //Do these when start page.
+
+            //点击“清空”按钮.
+            jQuery("#btnClear").click(function(){
+                actionUrl ="http://${localURL}/thirdeval";
+                //alert(actionUrl);
+                window.location.href=actionUrl;
+            });
+
+            jQuery("#btnSave").click(function(){
+                //alert("post order");
+                postOrder();
+            });
+
+            function disableElements(el) {
+                for (var i = 0; i < el.length; i++) {
+                    el[i].disabled = true;
+
+                    disableElements(el[i].children);
+                }
+            }
+
+            function enableElements(el) {
+                for (var i = 0; i < el.length; i++) {
+                    el[i].disabled = false;
+
+                    enableElements(el[i].children);
+                }
+            }
+        });
+
+
+        function postOrder(){
+            if (check_submit())
+            {
+                //TODO: AJAX 异步提交
+                document.getElementById("formOrder").action = "http://${localURL}/thirdeval";
+                document.getElementById("formOrder").method = "POST";
+                //TODO: 不能这样提交,会造成多次提交,2017.10.29.  又改回这么提交了.否则不能提交.
+                document.getElementById("formOrder").submit();
+            }
+             //jQuery("#btnConfirmAdd").show();
+        }
+
+        <%namespace name="comp" file="componentsThirdEval.html" />
+        ${comp.layoutOrderCheckSubmit(fName='check_submit')}
+
+    </script>
+
+</head>
+
+<body>
+
+<form id="formOrder">
+
+<div class="bs-docs-div-compress">
+                <label class="label label-info label-large">第三方评估与乐尔之家评估等级登记表</label>
+    <div>
+                    % if orderid is not None:
+                        <label class="label label-normal" >评估编号:${orderid}</label>
+                    % else:
+                        <button type="button" class="btn btn-small" id="btnClear">清空</button>
+                        <button type="button" class="btn btn-small" id="btnSave">保存</button>
+                    %endif
+   </div>
+</div>
+
+    %if configPage.as_bool('hasBasic'):
+    <div class="bs-docs-div-compress">
+                <label class="label label-info label-large">客户基本信息</label>
+            <div>
+                <table class="table table-normal table-condensed">
+                    <%
+                        configPageBasicPage = configPage['basic_page']
+                        configUsing =copy.deepcopy(configPageBasicPage)
+                    %>
+                    <%namespace name="comp" file="componentsThirdEval.html" />
+                    ${comp.layoutControlList(configItem=configUsing,dataItem = localThirdEval_Info)}
+
+                </table>
+            </div>
+    </div>
+    %endif
+
+
+    %if configPage.as_bool('hasThird'):
+    <div class="bs-docs-div-compress">
+                <label class="label label-info label-large">第三方评估维度</label>
+            <div>
+                <table class="table table-normal table-condensed">
+                    <%
+                        configPageThirdPage = configPage['third_page']
+                        configUsing =copy.deepcopy(configPageThirdPage)
+                    %>
+                    <%namespace name="comp" file="componentsThirdEval.html" />
+                    ${comp.layoutControlList(configItem=configUsing,dataItem = localThirdEval_Info)}
+
+                </table>
+            </div>
+    </div>
+    %endif
+
+    %if configPage.as_bool('hasLeer'):
+    <div class="bs-docs-div-compress">
+                <label class="label label-info label-large">乐尔之家评估维度</label>
+        <div>
+                <table class="table table-normal table-condensed">
+                    <%
+                        configPageLeerPage = configPage['leer_page']
+                        configUsing =copy.deepcopy(configPageLeerPage)
+                    %>
+                    <%namespace name="comp" file="componentsThirdEval.html" />
+                    ${comp.layoutControlList(configItem=configUsing,dataItem = localThirdEval_Info)}
+                </table>
+        </div>
+    </div>
+    %endif
+
+</form>
+</body>
+</html>
+
