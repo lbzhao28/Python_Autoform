@@ -1,0 +1,10 @@
+tornado
+torndb
+mako
+MySQL-python
+python-memcached
+simplejson
+pycurl
+behave
+wheel
+ConfigObj
