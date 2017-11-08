@@ -20,6 +20,7 @@ from handler import autoform,thirdeval
 
 define('cmd', default='runserver', metavar='runserver|syncdb|syncnewdb')
 define('port', default=settings['cfg'].get('port', 'port'), type=int)
+define('cmdport')
 
 from common.Log import LogInit
 
@@ -43,7 +44,13 @@ def runserver():
     loggerRoot = logging.getLogger('root')
 
     http_server = HTTPServer(Application(), xheaders=True)
-    http_server.listen(options.port)
+    localPort = 0
+    if (options.cmdport is not None):
+        http_server.listen(options.cmdport)
+        localPort = options.cmdport
+    else:
+        http_server.listen(options.port)
+        localPort = options.port
 
     loop = tornado.ioloop.IOLoop.instance()
 
