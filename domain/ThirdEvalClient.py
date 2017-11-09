@@ -14,7 +14,7 @@ from configObjData import getConfigPage
 
 configPage = getConfigPage()
 
-def getThirdEvalInfo(inOrderid):
+def getThirdEvalInfo(inOrderid,configPage):
     """
         get the third eval info from DB
         now, we simulate some json data.

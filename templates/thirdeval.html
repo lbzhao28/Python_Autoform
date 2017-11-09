@@ -10,13 +10,11 @@
 ##if has orderid ,show the data.
 ##if no orderid, show a blank file.
 <%!
-import ThirdEvalClient
 import json
 
 import configData
 from configData import getConfig
 #print getConfig.__doc__
-
 
 localURL = getConfig('SERVERINFO','serverIP','str')
 
@@ -27,18 +25,6 @@ sys.setdefaultencoding('utf8')
 
 import copy
 %>
-<%
-localThirdEval_Info = None
-
-if queryDict is None:
-    localThirdEval_Info = None
-else:
-    if orderid is not None:
-        localThirdEval_Info = ThirdEvalClient.getThirdEvalInfo(orderid)
-    else:
-        localThirdEval_Info = None
-%>
-
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link href="http://${localURL}/static/css/bootstrap.css" rel="stylesheet" media="screen">
     <link href="http://${localURL}/static/css/docs.css" rel="stylesheet" media="screen">

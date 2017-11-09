@@ -1,4 +1,4 @@
-## componentsThirdEval.html
+## components.html
 
 <%def name="layoutControlList(configItem,dataItem)">
 <%
@@ -24,6 +24,7 @@ else:
 #start from 0.
 j = 0
 %>
+
 <tr>
     %for j in range(stepRow):
         %for member in configItem:
@@ -251,3 +252,4 @@ configPage = getConfigPage()
                     %endif
                 </td>
 </%def>
+

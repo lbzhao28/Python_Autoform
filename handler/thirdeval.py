@@ -19,6 +19,7 @@ import logging
 import json
 from handler import BaseHandler
 from domain.ThirdEvalDomainHandler import postThirdEvalInfo
+from domain.ThirdEvalClient import getThirdEvalInfo,getThirdEvalInfoLst
 import configObjData
 from configObjData import getConfigPage
 
@@ -72,11 +73,10 @@ class ThirdevalHandler(BaseHandler):
             orderid = self.get_argument("orderid",None)
             query_dict = self.get_arguments()
 
-            #get the config data
-            configPage = getConfigPage()
+
 
             #render the page.
-            self.render("thirdeval.html",orderid = orderid,queryDict = query_dict)
+            self.render("thirdeval.html",orderid = orderid,thirdeval_info = localThirdEval_Info)
 
         except Exception as ex:
             logging.error(ex)
