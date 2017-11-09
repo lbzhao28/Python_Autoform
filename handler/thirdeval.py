@@ -18,6 +18,9 @@ from lib.route import route
 import logging
 import json
 from handler import BaseHandler
+from domain.ThirdEvalDomainHandler import postThirdEvalInfo
+import configObjData
+from configObjData import getConfigPage
 
 @route(r'/thirdevalList', name='thirdevalList') #第三方评估列表页面
 class ThirdevalListHandler(BaseHandler):
@@ -33,36 +36,17 @@ class ThirdevalListHandler(BaseHandler):
 
     def get(self):
         try:
-            logger.debug("start thirdevalList Page GET response")
+            self.loggerRoot.debug("start thirdevalList Page GET response")
 
-            parsed_url = urlparse.urlparse(web.ctx.fullpath)
-            query_url = parsed_url.query
-            if (query_url != ''):
-                query_dict = dict(urlparse.parse_qsl(query_url))
+            orderid = self.get_argument("orderid",None)
+            query_dict = self.get_arguments()
 
-                if 'orderid' in query_dict:
-                    orderid = query_dict['orderid']
-                else:
-                    orderid = None
 
-                if 'pageindex' in query_dict:
-                    pageindex = query_dict['pageindex']
-                else:
-                    pageindex = None
+            pageindex = self.get_argument("pageindex",None)
 
-                return render.thirdevalList(orderid=orderid,pageindex=pageindex)
-            else:
-                orderid = None
-                pageindex  = None
-                return render.thirdevalList(orderid=orderid,pageindex=pageindex)
-        except:
-            logger.error("exception occur, see the traceback.log")
-            #异常写入日志文件.
-            f = open('traceback.txt','a')
-            traceback.print_exc()
-            traceback.print_exc(file = f)
-            f.flush()
-            f.close()
+            self.render("thirdevalList.html",orderid = orderid,pageindex=pageindex)
+        except Exception as ex:
+            logging.error(ex)
         finally:
             pass
 
@@ -87,7 +71,13 @@ class ThirdevalHandler(BaseHandler):
 
             orderid = self.get_argument("orderid",None)
             query_dict = self.get_arguments()
+
+            #get the config data
+            configPage = getConfigPage()
+
+            #render the page.
             self.render("thirdeval.html",orderid = orderid,queryDict = query_dict)
+
         except Exception as ex:
             logging.error(ex)
         finally:
@@ -99,7 +89,7 @@ class ThirdevalHandler(BaseHandler):
 
             data = self.get_arguments()
 
-            retStr = ThirdEvalDomainHandler.postThirdEvalInfo(data)
+            retStr = postThirdEvalInfo(data)
 
             if retStr is None:
                 self.write('add failure.')
@@ -110,7 +100,7 @@ class ThirdevalHandler(BaseHandler):
             if (retDict["RETURNFLAG"] == True):
                 #refresh the order.
                 orderidStr = retDict["OrderID"]
-                self.render("thirdeval.html",orderid = orderid)
+                self.render("thirdeval.html",orderid = orderidStr)
             else:
                 self.write('add failure.')
         except Exception as ex:

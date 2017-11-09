@@ -80,7 +80,7 @@ def runserver():
     signal.signal(signal.SIGTERM, sig_handler)
     ipList = socket.gethostbyname_ex(socket.gethostname())
     localIp = ipList[2][len(ipList[2]) - 1]
-    loggerRoot.info('Server running on http://%s:%s' % (localIp, options.port))
+    loggerRoot.info('Server running on http://%s:%s' % (localIp, localPort))
     loop.start()
 
 

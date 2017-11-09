@@ -13,14 +13,10 @@
 import ThirdEvalClient
 import json
 
-import configObjData
-from configObjData import getConfigPage
-
 import configData
 from configData import getConfig
 #print getConfig.__doc__
 
-configPage = getConfigPage()
 
 localURL = getConfig('SERVERINFO','serverIP','str')
 
